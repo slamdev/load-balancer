@@ -5,6 +5,7 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'jacoco'
+    id 'maven'
     id 'com.ofg.uptodate' version '1.6.2'
 }
 
