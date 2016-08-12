@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.time.Duration.ZERO;
 import static java.time.Duration.between;
@@ -33,18 +34,24 @@ public class LoadBalancer {
 
     private final HostAvailabilityChecker hostAvailabilityChecker;
 
+    private final ScheduledExecutorService failedServersChecker = newScheduledThreadPool(1);
+
     public LoadBalancer(List<String> hosts, HostAvailabilityChecker hostAvailabilityChecker, Duration hostAvailabilityCheckDuration) {
         if (hosts.isEmpty()) {
             throw new IllegalArgumentException("At least one host should be provided");
         }
         liveServers = hosts.stream().map(Server::new).collect(toCollection(CopyOnWriteArrayList::new));
         this.hostAvailabilityChecker = hostAvailabilityChecker;
-        newScheduledThreadPool(1).scheduleAtFixedRate(
+        failedServersChecker.scheduleAtFixedRate(
                 this::checkFailedServers,
                 hostAvailabilityCheckDuration.toNanos(),
                 hostAvailabilityCheckDuration.toNanos(),
                 NANOSECONDS
         );
+    }
+
+    public void dispose() {
+        failedServersChecker.shutdownNow();
     }
 
     private void checkFailedServers() {
