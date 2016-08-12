@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+    }
+}
+
 plugins {
     id 'java'
     id 'idea'
@@ -5,9 +15,11 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'jacoco'
-    id 'maven'
-    id 'com.ofg.uptodate' version '1.6.2'
+    id 'maven-publish'
 }
+
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-idea'
 
 ext {
     excludeFromCoverage = ['**/Server*', '**/Operation*']
@@ -20,6 +32,17 @@ group 'com.github.slamdev'
 version '1.0.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId project.group
+            artifactId project.name
+            version project.version
+            from components.java
+        }
+    }
+}
 
 idea {
     project {
@@ -53,8 +76,8 @@ task wrapper(type: Wrapper) {
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
-    compile 'ch.qos.logback:logback-classic:1.1.7'
-    compile 'org.projectlombok:lombok:1.16.10'
+    optional 'ch.qos.logback:logback-classic:1.1.7'
+    provided 'org.projectlombok:lombok:1.16.10'
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.10.19'
     testCompile 'org.hamcrest:hamcrest-library:1.3'

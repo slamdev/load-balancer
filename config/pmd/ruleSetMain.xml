@@ -41,7 +41,7 @@
     </rule>
     <rule ref="rulesets/java/empty.xml">
         <exclude name="EmptyCatchBlock"/>
-            </rule>
+    </rule>
     <rule ref="rulesets/java/finalizers.xml"/>
     <rule ref="rulesets/java/imports.xml">
         <exclude name="TooManyStaticImports"/>

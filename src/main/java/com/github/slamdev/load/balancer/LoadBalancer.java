@@ -77,11 +77,11 @@ public class LoadBalancer {
         server.setDuration(server.getDuration().plus(duration));
         try {
             Instant clock = now();
-            LOGGER.info("Start operation {} {} on server {}", uri, method, server);
+            LOGGER.debug("Start operation {} {} on server {}", uri, method, server);
             T response = request.execute(server.getHost() + uri, method);
             server.setDuration(server.getDuration().minus(duration));
             duration = between(clock, now());
-            LOGGER.info("End operation {} {} on server {} for {}", uri, method, server, duration);
+            LOGGER.debug("End operation {} {} on server {} for {}", uri, method, server, duration);
             operationTime.put(operation, duration);
             return response;
         } catch (IOException e) {
