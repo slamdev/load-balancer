@@ -43,11 +43,6 @@ public class LoadBalancerTest {
         request = mock(LoadBalancedRequest.class);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void should_throw_exception_when_no_hosts_provided() {
-        new LoadBalancer(emptyList(), (host) -> true, ofMinutes(1));
-    }
-
     @Test
     public void should_execute_provided_request() throws IOException {
         when(request.execute(anyString(), anyString())).thenReturn("some-response");
@@ -57,6 +52,17 @@ public class LoadBalancerTest {
 
     @Test
     public void should_append_host_to_request_uri() throws IOException {
+        when(request.execute(eq(HOST_1 + "/uri"), anyString())).thenReturn("some-response");
+        String response = balancer.executeRequest("/uri", "", request);
+        assertThat(response, is("some-response"));
+    }
+
+    @Test
+    public void should_user_new_host_when_balancer_already_constructed() throws IOException {
+        expectedException.expect(IOException.class);
+        LoadBalancer balancer = new LoadBalancer(emptyList(), (host) -> true, ofMinutes(1));
+        balancer.executeRequest("/uri", "", request);
+        balancer.addHosts(singletonList(HOST_1));
         when(request.execute(eq(HOST_1 + "/uri"), anyString())).thenReturn("some-response");
         String response = balancer.executeRequest("/uri", "", request);
         assertThat(response, is("some-response"));

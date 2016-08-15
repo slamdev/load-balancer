@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -19,14 +18,13 @@ import static java.time.Duration.between;
 import static java.time.Instant.now;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
 public class LoadBalancer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadBalancer.class);
 
-    private final List<Server> liveServers;
+    private final Set<Server> liveServers = new CopyOnWriteArraySet<>();
 
     private final Set<Server> failedServers = new CopyOnWriteArraySet<>();
 
@@ -37,10 +35,7 @@ public class LoadBalancer {
     private final ScheduledExecutorService failedServersChecker = newScheduledThreadPool(1);
 
     public LoadBalancer(List<String> hosts, HostAvailabilityChecker hostAvailabilityChecker, Duration hostAvailabilityCheckDuration) {
-        if (hosts.isEmpty()) {
-            throw new IllegalArgumentException("At least one host should be provided");
-        }
-        liveServers = hosts.stream().map(Server::new).collect(toCollection(CopyOnWriteArrayList::new));
+        addHosts(hosts);
         this.hostAvailabilityChecker = hostAvailabilityChecker;
         failedServersChecker.scheduleAtFixedRate(
                 this::checkFailedServers,
@@ -48,6 +43,11 @@ public class LoadBalancer {
                 hostAvailabilityCheckDuration.toNanos(),
                 NANOSECONDS
         );
+    }
+
+    public final void addHosts(List<String> hosts) {
+        List<Server> servers = hosts.stream().map(Server::new).collect(toList());
+        liveServers.addAll(servers);
     }
 
     public void dispose() {
